@@ -1,0 +1,49 @@
+import sqlite3
+
+conn = sqlite3.connect('database.db')
+c = conn.cursor()
+
+# Users table
+c.execute('''
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    email TEXT NOT NULL,
+    password TEXT NOT NULL
+)
+''')
+
+# Projects table
+c.execute('''
+CREATE TABLE IF NOT EXISTS projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    project_name TEXT,
+    stage TEXT,
+    support_needed TEXT,
+    completed BOOLEAN DEFAULT 0
+)
+''')
+
+# Comments table
+c.execute('''
+CREATE TABLE IF NOT EXISTS comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER,
+    commenter TEXT,
+    comment TEXT
+)
+''')
+
+# Milestones table
+c.execute('''
+CREATE TABLE IF NOT EXISTS milestones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER,
+    milestone TEXT,
+    date_created TEXT
+)
+''')
+
+conn.commit()
+conn.close()
