@@ -1,5 +1,3 @@
-# Derivco-Challenge
-Code Skills Quest submission for Derivco Graduate Programme
 # MzansiBuilds - Derivco Code Skills Challenge
 
 This is a public platform where developers can:
