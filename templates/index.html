@@ -1,1 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MzansiBuilds</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+        }
+        body.dark-mode {
+            background-color: #111111;
+            color: #ffffff;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background-color: #008000;
+            color: white;
+        }
+        header button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #ffffff;
+            color: #008000;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        section {
+            padding: 20px;
+        }
+        .projects-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .project-card {
+            border: 2px solid #008000;
+            border-radius: 10px;
+            padding: 15px;
+            width: 300px;
+            background-color: #f0fff0;
+        }
+        body.dark-mode .project-card {
+            background-color: #222;
+            border-color: #00ff00;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .progress-bar {
+            background-color: #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 15px;
+            margin: 10px 0;
+        }
+        .progress {
+            height: 100%;
+            background-color: #008000;
+            width: 0%;
+        }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            margin-right: 5px;
+            background-color: #00aa00;
+            color: white;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        body.dark-mode .tag {
+            background-color: #00ff00;
+            color: #000;
+        }
+        .comment {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        body.dark-mode .comment {
+            border-color: #555;
+        }
+        /* Search & filter */
+        #project-search, #stage-filter {
+            padding: 8px;
+            width: 300px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
 
+<header>
+    {% if username %}
+        <h2>Welcome, {{ username }}!</h2>
+        <a href="/logout" style="color:white; text-decoration:underline;">Logout</a>
+    {% else %}
+        <p>Please login or signup to join the community</p>
+    {% endif %}
+    <h1>MzansiBuilds</h1>
+    <p>Track your projects and collaborate with other developers!</p>
+
+    <!-- Dark/Light Mode Toggle -->
+    <button id="theme-toggle">Toggle Dark/Light Mode</button>
+</header>
+
+<!-- Sign Up Section -->
+<section>
+    <h2>Sign Up</h2>
+    <form method="POST" action="/signup">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Sign Up</button>
+    </form>
+</section>
+
+<!-- Login Section -->
+<section>
+    <h2>Login</h2>
+    <form method="POST" action="/login">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+</section>
+
+<!-- Add Project Section -->
+<section>
+    <h2>Add Project</h2>
+    <form method="POST" action="/add_project">
+        <input type="text" name="project_name" placeholder="Project Name" required>
+        <input type="text" name="stage" placeholder="Stage (e.g. Idea, Building)">
+        <input type="text" name="support" placeholder="Support Needed">
+        <input type="text" name="tags" placeholder="Tags (comma-separated)">
+        <button type="submit">Add Project</button>
+    </form>
+</section>
+
+<!-- Search / Filter Projects -->
+<section>
+    <h2>Search / Filter Projects</h2>
+    <input type="text" id="project-search" placeholder="Search by name or tags...">
+    <select id="stage-filter">
+        <option value="">All Stages</option>
+        <option value="Idea">Idea</option>
+        <option value="Building">Building</option>
+        <option value="Completed">Completed</option>
+    </select>
+</section>
+
+<!-- Live Feed -->
+<section>
+    <h2>Live Feed</h2>
+    <div class="projects-container" id="projects-container">
+        {% for project in projects %}
+        <div class="project-card" data-stage="{{ 'Completed' if project[6] == 1 else project[3] }}">
+            <div class="card-header">
+                <img src="{{ url_for('static', filename='avatar.png') }}" class="avatar">
+                <strong>{{ project[2] }}</strong> by {{ project[1] }}
+            </div>
+            <p class="project-stage">Stage: {{ project[3] }}</p>
+            <p class="project-needs">Needs: {{ project[4] if project[4] else 'Not specified' }}</p>
+
+            <!-- Tags -->
+            {% if project[5] %}
+                <div class="project-tags">
+                    {% for tag in project[5].split(',') %}
+                        <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress" style="width: {{ 100 if project[6] == 1 else 0 }}%"></div>
+            </div>
+
+            <!-- Milestones -->
+            <strong>Milestones Timeline:</strong>
+            <ul>
+                {% for milestone in project[7] %}
+                    <li>{{ milestone }}</li>
+                {% endfor %}
+            </ul>
+
+            <!-- Add Milestone & Complete -->
+            {% if project[6] == 0 %}
+            <form method="POST" action="/add_milestone">
+                <input type="hidden" name="project_id" value="{{ project[0] }}">
+                <input type="text" name="milestone" placeholder="Add milestone" required>
+                <button type="submit">Add</button>
+            </form>
+            <form method="POST" action="/complete_project">
+                <input type="hidden" name="project_id" value="{{ project[0] }}">
+                <button type="submit">Mark as Completed 🎉</button>
+            </form>
+            {% else %}
+                <p>✅ Completed</p>
+            {% endif %}
+
+            <!-- Comments -->
+            <strong>Comments:</strong>
+            <div>
+                {% for comment in project[8] %}
+                    <div class="comment">
+                        <strong>{{ comment[0] }}</strong>: {{ comment[1] }} <em>({{ comment[2] }})</em>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if username %}
+            <form method="POST" action="/add_comment">
+                <input type="hidden" name="project_id" value="{{ project[0] }}">
+                <input type="text" name="comment" placeholder="Add a comment" required>
+                <button type="submit">Comment</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Celebration Wall -->
+<section>
+    <h2>🎉 Celebration Wall</h2>
+    <ul>
+        {% for project in projects %}
+            {% if project[6] == 1 %}
+                <li><strong>{{ project[2] }}</strong> completed! 🎉</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</section>
+
+<script>
+const toggleBtn = document.getElementById('theme-toggle');
+toggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+});
+
+// --- Search & Stage Filter ---
+const searchInput = document.getElementById('project-search');
+const stageFilter = document.getElementById('stage-filter');
+const projectCards = document.querySelectorAll('.project-card');
+
+function filterProjects() {
+    const query = searchInput.value.toLowerCase();
+    const stage = stageFilter.value;
+
+    projectCards.forEach(card => {
+        const name = card.querySelector('.card-header strong').textContent.toLowerCase();
+        const tags = Array.from(card.querySelectorAll('.tag')).map(t => t.textContent.toLowerCase()).join(' ');
+        const cardStage = card.getAttribute('data-stage');
+
+        const matchesQuery = name.includes(query) || tags.includes(query);
+        const matchesStage = !stage || cardStage === stage;
+
+        card.style.display = (matchesQuery && matchesStage) ? 'block' : 'none';
+    });
+}
+
+searchInput.addEventListener('input', filterProjects);
+stageFilter.addEventListener('change', filterProjects);
+</script>
+
+</body>
+</html>
